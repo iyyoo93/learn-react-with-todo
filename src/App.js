@@ -1,23 +1,48 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState, useRef, useEffect } from 'react';
+import TodoList from './TodoList';
+import { v4 as uuidv4 } from 'uuid';
 
 function App() {
+  const [todoList, setTodoList] = useState([]);
+  const inputRef = useRef();
+
+  useEffect(() => {
+    const localval = localStorage.getItem('TODOLIST');
+    setTodoList(JSON.parse(localval));
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('TODOLIST', JSON.stringify(todoList));
+  }, [todoList]);
+
+  const handleAddClick = () => {
+    const val = inputRef.current.value;
+    const tmpToDo = [...todoList];
+    tmpToDo.push({id: uuidv4(), desc: val, complete: false});
+    setTodoList(tmpToDo);
+    inputRef.current.value = '';
+  }
+
+  const toogleComplete = (id) => {
+    const tmpToDo = [...todoList];
+    const todoElem = tmpToDo.find(todo => todo.id === id);
+    todoElem.complete = !todoElem.complete;
+    setTodoList(tmpToDo);
+  }
+
+  const clearComplete = () => {
+    const tmpToDo = [...todoList];
+    const unCompletetodo = tmpToDo.filter(todo => !todo.complete);
+    setTodoList(unCompletetodo);
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <TodoList todoList={todoList} toogleComplete={toogleComplete} />
+      <input ref={inputRef} />
+      <button onClick={handleAddClick}>Add todo</button>
+      <button onClick={clearComplete}>Clear complete Todo</button>
+      <p>{todoList.filter(todo => !todo.complete).length} left to do</p>
     </div>
   );
 }
